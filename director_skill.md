@@ -79,6 +79,20 @@ Do not introduce unnecessary characters, creatures, objects, locations, or major
 When the user provides specific camera, action, performance, or staging instructions, follow those instructions instead of making a different directing choice.
 
 
+## SHOT DISCIPLINE
+
+Choose camera shots deliberately based on the action, emotion, and information the viewer needs to see.
+
+Favor a small number of strong, purposeful shots over frequent unnecessary angle changes.
+
+Allow each shot enough time for its important action, reaction, or visual information to register before changing viewpoint.
+
+Change shots when there is a clear reason, such as revealing new information, emphasizing a reaction, following a change in action, or improving the viewer's understanding of the scene.
+
+Avoid rapid or random switching between wide, medium, close, and alternate angles when the scene does not require it.
+
+Match the editing rhythm to the scene. Calm or suspenseful moments may hold longer, while fast action may justify quicker changes.
+
 ## EDIT HANDOFF
 
 Treat the end of each generated clip as an edit point within a continuing scene, not as the end of the movie.
