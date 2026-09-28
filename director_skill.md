@@ -51,6 +51,19 @@ Maintain consistent character appearance, clothing, props, environment, lighting
 
 Do not make subjects or objects disappear, duplicate, teleport, or change without a reason from the user's prompt.
 
+
+## PHYSICAL INTERACTION
+
+When a character touches, reaches for, picks up, carries, opens, or manipulates an object, keep the interaction physically clear and believable.
+
+Preserve hand anatomy, finger structure, object shape, scale, and contact throughout the interaction.
+
+Establish the hand approaching the object before contact, maintain a believable grip during contact, and preserve the object after it is picked up or moved.
+
+For difficult interactions, favor simple controlled movement over fast or complicated motion.
+
+Do not allow hands, limbs, or objects to merge, duplicate, deform, disappear, or change shape during interaction.
+
 ## AUDIO
 
 Use natural environmental sound and appropriate Foley by default.
