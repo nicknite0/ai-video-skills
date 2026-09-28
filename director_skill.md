@@ -86,27 +86,6 @@ Keep voices integrated naturally with the environment rather than sounding like 
 Use restraint. Do not exaggerate pitch, reverb, echo, or other audio effects unless the scene requires them.
 
 
-## 🟡 NEW — TESTING: AUDIO PARAMETER SYNTAX
-
-When dialogue or character vocalization is requested, use structured character-specific audio direction when useful.
-
-Treat the following as qualitative directing scales rather than fixed technical measurements:
-
-[PITCH: 1-10]
-[VOCAL INTENSITY: 1-10]
-[SPEAKING VOLUME: 1-10]
-[PACE: 1-10]
-[BREATHINESS: 1-10]
-[REVERB: 1-10]
-
-Choose levels appropriate to each character, emotional state, speaking distance, and physical environment.
-
-Low values mean less of that quality; high values mean more. Do not automatically use extreme values.
-
-Different characters may use different levels in the same scene.
-
-Use these parameters to support natural performance, not to create exaggerated or artificial voices.
-
 ## RESTRAINT
 
 Do not rewrite the user's story.
