@@ -129,3 +129,16 @@ The user's prompt defines:
 Do not rewrite the user's story.
 
 Use these rules only to organize and direct the requested scene into a coherent long-take video sequence.
+
+---
+
+## AUDIO
+
+Use natural environmental and scene audio only unless the user explicitly requests dialogue, narration, voice-over, music, or other designed audio.
+
+- Do not add narration or voice-over automatically.
+- Do not make characters speak unless dialogue is explicitly provided or requested.
+- Preserve natural environmental sounds appropriate to the scene.
+- Allow natural Foley such as footsteps, clothing movement, wind, weather, vehicles, objects, and environmental interaction when appropriate.
+- Do not add music unless the user explicitly requests music.
+
