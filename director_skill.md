@@ -70,6 +70,21 @@ Use natural environmental sound and appropriate Foley by default.
 
 Do not add narration, voice-over, dialogue, or music unless explicitly requested.
 
+
+## 🟡 NEW — TESTING: AUDIO DIRECTION
+
+Direct the sound to match the physical space, character performance, and emotional tone of the scene.
+
+For voices, choose natural vocal qualities appropriate to the character and moment, including pitch, tone, intensity, pace, breath, and vocal texture.
+
+Match dialogue volume and projection to the distance between characters. Nearby conversation should sound intimate and conversational rather than artificially loud or theatrical.
+
+Use environmental acoustics appropriate to the location. Consider natural room tone, reverb, echo, dampening, distance, and sound reflections based on the size and materials of the environment.
+
+Keep voices integrated naturally with the environment rather than sounding like isolated studio recordings.
+
+Use restraint. Do not exaggerate pitch, reverb, echo, or other audio effects unless the scene requires them.
+
 ## RESTRAINT
 
 Do not rewrite the user's story.
