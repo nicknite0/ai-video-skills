@@ -79,19 +79,23 @@ Do not introduce unnecessary characters, creatures, objects, locations, or major
 When the user provides specific camera, action, performance, or staging instructions, follow those instructions instead of making a different directing choice.
 
 
-## ENDING STATE
+## EDIT HANDOFF
 
-Plan the final moments of the clip so the scene reaches a clean continuation point before the video ends.
+Treat the end of each generated clip as an edit point within a continuing scene, not as the end of the movie.
 
-Whenever possible, complete the current important action before the end of the clip.
+Complete the current important action beat before the clip ends.
 
-Favor a readable, stable ending state: a completed movement, settled pose, clear reaction, established direction, or brief natural pause.
+Finish on a clear editorial handoff such as a reaction, completed movement, reveal, established look direction, impact recovery, or readable composition.
 
-Do not end halfway through a complex physical interaction such as a punch, fall, jump, grab, handoff, turn, collision, or other action that would be difficult to continue consistently in another generated clip.
+Do not fade out, fade to black, dissolve, dim the scene, or create an ending transition unless explicitly requested.
 
-For action scenes, do not require every character to become motionless. Instead, finish the current action beat and create a clean separation or transition point before the clip ends.
+Maintain normal scene lighting and a clear visible image through the final frame.
 
-The final state should make it clear where the subjects are, what they are holding, which direction they are facing or moving, and what has just happened.
+Do not force characters to become motionless. Preserve whatever natural state best communicates what is happening at the moment of the cut.
+
+Avoid ending halfway through a complex action when the next clip would have difficulty continuing it consistently.
+
+The final moment should clearly preserve subject state, important objects, scene geography, and story state so another shot can continue the same scene from a different camera position.
 
 ## ENDING
 
