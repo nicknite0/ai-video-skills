@@ -78,6 +78,21 @@ Do not introduce unnecessary characters, creatures, objects, locations, or major
 
 When the user provides specific camera, action, performance, or staging instructions, follow those instructions instead of making a different directing choice.
 
+
+## ENDING STATE
+
+Plan the final moments of the clip so the scene reaches a clean continuation point before the video ends.
+
+Whenever possible, complete the current important action before the end of the clip.
+
+Favor a readable, stable ending state: a completed movement, settled pose, clear reaction, established direction, or brief natural pause.
+
+Do not end halfway through a complex physical interaction such as a punch, fall, jump, grab, handoff, turn, collision, or other action that would be difficult to continue consistently in another generated clip.
+
+For action scenes, do not require every character to become motionless. Instead, finish the current action beat and create a clean separation or transition point before the clip ends.
+
+The final state should make it clear where the subjects are, what they are holding, which direction they are facing or moving, and what has just happened.
+
 ## ENDING
 
 Finish the scene on a clear, deliberate composition or completed action.
