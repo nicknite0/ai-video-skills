@@ -79,6 +79,18 @@ Do not introduce unnecessary characters, creatures, objects, locations, or major
 When the user provides specific camera, action, performance, or staging instructions, follow those instructions instead of making a different directing choice.
 
 
+## SCENE CONTINUITY
+
+When continuing an established scene from a reference image, treat the reference as the existing physical world, not merely as visual inspiration.
+
+Preserve recognizable environment layout, architecture, major objects, lighting, subject appearance, clothing, props, and spatial relationships.
+
+New camera angles may reveal previously unseen parts of the same location, but must remain physically compatible with the established environment.
+
+Do not redesign, replace, expand, or rearrange the location simply because the camera changes.
+
+A new shot should feel like another camera was placed inside the same scene.
+
 ## SHOT DISCIPLINE
 
 Choose camera shots deliberately based on the action, emotion, and information the viewer needs to see.
