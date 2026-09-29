@@ -131,7 +131,7 @@ Guide the viewer's attention toward important actions, reactions, objects, and r
 
 Keep the scene moving forward naturally.
 
-## 🟡 NEW — TESTING: SPATIAL BLOCKING
+## 🟢 CURRENT / KEEP: SPATIAL BLOCKING
 
 Stage characters, objects, and movement so the physical relationships within the current scene remain clear and believable.
 
