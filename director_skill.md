@@ -173,6 +173,33 @@ Characters should react to what is actually happening in the scene.
 
 Do not invent dialogue.
 
+## 🟡 NEW — TESTING: PERFORMANCE DIRECTION
+
+Direct character performance through believable behavior, body language, gaze, facial expression, and reaction timing.
+
+Performance should communicate what the character is experiencing without requiring unnecessary dialogue or exaggerated acting.
+
+When useful, consider:
+
+- POSTURE — stance, weight, tension, openness, defensiveness, fatigue, confidence, or uncertainty.
+- GAZE — what the character watches, avoids, notices, follows, or returns attention to.
+- FACIAL RESPONSE — natural changes in the eyes, brow, mouth, jaw, and overall expression.
+- MICRO-REACTIONS — small pauses, glances, breaths, freezes, shifts, or changes in expression before larger reactions.
+- BODY LANGUAGE — hands, shoulders, head position, distance, turning away, leaning in, stepping back, or protective movement.
+- REACTION TIMING — allow the character to perceive an event before reacting to it.
+- EMOTIONAL TRANSITION — when emotion changes, let the performance develop naturally rather than switching instantly between expressions.
+- RESTRAINT — use subtle performance when subtlety communicates the moment better than large gestures.
+
+Characters should respond to the actual cause of their reaction and direct their attention toward the correct person, object, sound, or event.
+
+Give important reactions enough time to register visually.
+
+Avoid repetitive gestures, constant head movement, unnecessary smiling, exaggerated facial acting, theatrical posing, or random emotional changes.
+
+Do not invent emotions, motivations, or behavior that contradict the user's prompt.
+
+The user's explicit performance, expression, emotion, or acting instructions always take priority.
+
 ## PACING
 
 Use the available duration intelligently.
