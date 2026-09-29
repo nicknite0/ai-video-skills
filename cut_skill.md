@@ -29,6 +29,26 @@ Fast action does not automatically require more cuts.
 Do not create a regular cutting rhythm or cut every few seconds.
 Let the action, reaction, reveal, time change, or location change create the reason for the transition.
 
+## 🟡 NEW — TESTING: STORY-DRIVEN CUTTING
+
+A cut should change what the audience knows, sees, or feels. Do not cut only to show another arbitrary camera angle.
+
+Choose the next shot based on the most important story information at that moment.
+
+When two subjects are involved in the same unfolding moment, the edit may move between them to reveal what each subject is doing, seeing, or reacting to.
+
+Example behavior:
+- show a character performing an important action
+- cut to another character secretly watching, approaching, reacting, or acting elsewhere in the same moment
+- cut back to the first character as the original action continues
+- reveal the connection between them when the story beat calls for it
+
+Keep these shots on the same shared timeline. A cut to another subject does not restart the first subject's action.
+
+Prefer cuts that reveal new information, create anticipation, show a meaningful reaction, or clarify simultaneous action.
+
+Do not use a cut merely to generate a different view of the same subject when the new shot adds no useful story information.
+
 ## RESTRAINT
 
 Do not force frequent cuts.
