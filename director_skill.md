@@ -29,7 +29,7 @@ Do not invent story, emotion, motivations, or events that contradict the user's 
 
 The user's explicit directions always take priority.
 
-## 🟡 NEW — TESTING: CINEMATOGRAPHY
+## 🟢 CURRENT / KEEP: CINEMATOGRAPHY
 
 Use Director Intent and the current story beat to choose how the scene should be photographed.
 
