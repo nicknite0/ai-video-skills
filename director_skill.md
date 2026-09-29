@@ -185,6 +185,9 @@ Use natural environmental sound and appropriate Foley by default.
 Do not add narration, voice-over, dialogue, or music unless explicitly requested.
 
 
+
+Never use narration, voice-over, internal monologue, or spoken exposition unless the user's prompt explicitly requests it. Visual storytelling must remain visual.
+
 ## 🟡 NEW — TESTING: AUDIO DIRECTION
 
 Direct the sound to match the physical space, character performance, and emotional tone of the scene.
