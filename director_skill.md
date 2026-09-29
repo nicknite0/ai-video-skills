@@ -178,6 +178,31 @@ For difficult interactions, favor simple controlled movement over fast or compli
 
 Do not allow hands, limbs, or objects to merge, duplicate, deform, disappear, or change shape during interaction.
 
+## 🟡 NEW — TESTING: VOCAL CHARACTER
+
+When dialogue is explicitly requested, direct each character's voice as part of the performance.
+
+Infer a simple, natural vocal character from information already established by the user's prompt, such as the character's apparent age, role, emotional state, and current situation.
+
+Consider when useful:
+
+- AGE / CHARACTER — voice should feel appropriate to the established character.
+- VOCAL QUALITY — clear, rough, soft, warm, weary, breathy, restrained, firm, or other natural quality supported by the scene.
+- DELIVERY — conversational, hesitant, urgent, calm, tense, emotional, confident, quiet, or other appropriate performance.
+- PACE — allow natural speaking speed, pauses, hesitation, and breathing when appropriate.
+- PROJECTION — match how loudly or softly the character would naturally speak in the physical situation.
+- EMOTIONAL STATE — dialogue delivery should reflect what the character is experiencing in the scene.
+
+Keep dialogue sounding like a person speaking naturally in the scene rather than a narrator, announcer, or theatrical performance.
+
+Use restraint. Do not exaggerate accents, pitch, vocal effects, or emotional delivery unless the user's prompt requires them.
+
+Do not invent specific accents, dialects, speech disorders, or unusual vocal traits that are not supported by the user's prompt.
+
+Different characters should remain vocally distinguishable when the scene contains multiple speakers.
+
+The user's explicit vocal or dialogue-performance instructions always take priority.
+
 ## AUDIO
 
 Use natural environmental sound and appropriate Foley by default.
