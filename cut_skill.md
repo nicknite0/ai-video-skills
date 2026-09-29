@@ -29,25 +29,6 @@ Prefer the simplest transition that communicates the scene clearly.
 Fast action does not automatically require rapid cutting or flashy transitions.
 Allow action to determine the edit naturally.
 
-## 🟡 NEW — TESTING: TRANSITION CONTINUITY
-
-A transition changes the presentation of the scene, not established story state.
-
-Across a transition, preserve important:
-- characters
-- character identity and appearance
-- held or important props
-- action state and momentum
-- character positions and movement direction
-- established location and environment
-- consequences of actions that already occurred
-
-Do not reset, restart, repeat, or rewind an action because the shot changes.
-Do not make an important object disappear, appear, duplicate, transform, or change hands merely because of a transition.
-Do not duplicate or replace characters merely because of a transition.
-
-When intentionally changing time, location, or story state, make the change readable as part of the transition.
-
 ## RESTRAINT
 
 Do not force frequent cuts.
