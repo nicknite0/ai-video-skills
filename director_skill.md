@@ -29,6 +29,98 @@ Do not invent story, emotion, motivations, or events that contradict the user's 
 
 The user's explicit directions always take priority.
 
+## 🟡 NEW — TESTING: CINEMATOGRAPHY
+
+Use Director Intent and the current story beat to choose how the scene should be photographed.
+
+Camera choices should support story, emotion, action, and viewer understanding rather than being used only for visual variety.
+
+### CAMERA STYLE
+
+Choose an overall camera behavior appropriate to the scene when useful:
+
+- LOCKED / TRIPOD — stable, deliberate observation.
+- SMOOTH CINEMATIC — controlled, polished movement.
+- HANDHELD — natural instability, urgency, tension, or realism.
+- STABILIZED FOLLOW — smooth movement with a moving subject.
+- OBSERVATIONAL — restrained documentary-like coverage.
+- INTIMATE — close, subtle camera behavior emphasizing character emotion.
+- ENERGETIC — responsive movement appropriate to fast action.
+- FLOATING / DREAMLIKE — slow fluid movement for surreal or atmospheric moments.
+
+Do not change camera style randomly during a scene.
+
+### LENS PERSPECTIVE
+
+Choose lens perspective according to the visual purpose of the shot:
+
+- ULTRA-WIDE — emphasize environment, scale, distance, or dramatic perspective.
+- WIDE — establish location and spatial relationships.
+- NATURAL — balanced perspective for general character/action coverage.
+- MEDIUM TELEPHOTO — isolate characters and emphasize reactions.
+- TELEPHOTO — compress distance or strongly isolate a distant subject.
+- MACRO / DETAIL — emphasize very small objects or details.
+
+Use depth of field naturally when appropriate.
+
+Do not change lens perspective unnecessarily.
+
+### SHOT TYPE
+
+Choose framing according to what the viewer needs to see:
+
+- ESTABLISHING SHOT
+- WIDE SHOT
+- FULL-BODY SHOT
+- MEDIUM SHOT
+- MEDIUM CLOSE-UP
+- CLOSE-UP
+- EXTREME CLOSE-UP
+- OVER-THE-SHOULDER
+- POV
+- INSERT / DETAIL SHOT
+- REACTION SHOT
+- LOW ANGLE
+- HIGH ANGLE
+
+### CAMERA MOVEMENT
+
+Choose movement only when it improves the scene:
+
+- STATIC / LOCKED
+- PAN
+- TILT
+- TRACK / FOLLOW
+- DOLLY IN
+- DOLLY OUT
+- PUSH IN
+- PULL BACK
+- CRANE / JIB
+- ORBIT
+- PEDESTAL
+- HANDHELD FOLLOW
+
+Camera movement should have a clear beginning, purpose, and destination.
+
+Do not add movement merely because movement is available.
+
+### CINEMATOGRAPHY DECISION
+
+For each important story beat, determine:
+
+1. What does the audience need to see?
+2. What should receive visual emphasis?
+3. What camera position best communicates it?
+4. What shot size best communicates it?
+5. What lens perspective supports it?
+6. Should the camera move or remain still?
+
+Prefer the simplest cinematography that clearly communicates the moment.
+
+Hold strong compositions when movement or a shot change is unnecessary.
+
+The user's explicit camera, lens, framing, or movement instructions always take priority.
+
 ## SCENE DIRECTION
 
 Arrange subjects, objects, and actions so the scene is easy to understand.
