@@ -9,8 +9,8 @@ body{margin:0;background:#070b12;color:#e8f0ff;font-family:system-ui}main{max-wi
 <div class="panel preview"><span class="step">MAIN PREVIEW</span><div id="previewName" class="sub" style="float:right">No clip selected</div><video id="preview" controls></video></div>
 <div class="panel"><progress id="progress" value="0" max="1"></progress><div id="status" class="sub">Add clips to begin.</div></div>
 <div id="clips" class="clips"></div>
-<div class="panel"><span class="step">2. EDIT STYLE</span><div id="styles" class="styles"></div></div>
-<div class="panel"><span class="step">3. FFMPEG ENGINE TEST</span><div class="sub" style="margin:7px 0">FFmpeg joins every loaded clip in order into one MP4 using concat + stream copy. Up to 20 clips. No re-encode when source streams are compatible.</div><div class="actions"><button id="ffload">LOAD FFMPEG</button><button id="fftest" disabled>BUILD FINAL VIDEO — UP TO 20 CLIPS</button></div><div id="ffstatus" class="sub">FFmpeg not loaded.</div></div>
+<div class="panel"><span class="step">2. EDIT STYLE</span><div id="styles" class="styles"></div><div id="stylePlan" class="sub" style="margin-top:10px">Scan clips, then choose a style.</div></div>
+<div class="panel"><span class="step">3. BUILD EDIT</span><div class="sub" style="margin:7px 0">The selected edit style now controls the first editing pass. Natural / Cinematic preserves full clips with clean cuts; other styles apply style-specific transition timing between full clips. Up to 20 clips.</div><div class="actions"><button id="ffload">LOAD FFMPEG</button><button id="fftest" disabled>BUILD FINAL VIDEO — UP TO 20 CLIPS</button></div><div id="ffstatus" class="sub">FFmpeg not loaded.</div></div>
 <canvas id="c" style="display:none"></canvas>
 <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 <script>
@@ -25,30 +25,54 @@ async function loadFFmpegEngine(){
  }catch(e){s.textContent='FFmpeg load failed: '+e.message;b.disabled=false}
 }
 async function testFFmpegOne(){
- if(files.length<2||!ffmpeg||!ffmpeg.isLoaded())return;
- const st=$('ffstatus'),v=$('preview');$('fftest').disabled=true;
+ if(files.length<2||!style||!ffmpeg||!ffmpeg.isLoaded())return;
+ const st=$('ffstatus'),v=$('preview'),plan=stylePlans[style];$('fftest').disabled=true;
  const names=[];
  try{
-  st.textContent='FFmpeg: loading '+files.length+' clips…';
+  st.textContent='FFmpeg: loading '+files.length+' clips for '+style+' edit…';
   for(let i=0;i<files.length;i++){const n='clip'+(i+1)+'.mp4';names.push(n);ffmpeg.FS('writeFile',n,await FFmpeg.fetchFile(files[i]));}
-  const list=names.map(n=>"file '"+n+"'").join('\n')+'\n';
-  ffmpeg.FS('writeFile','concat_list.txt',new TextEncoder().encode(list));
-  st.textContent='FFmpeg: joining '+files.length+' clips with stream copy…';
-  await ffmpeg.run('-f','concat','-safe','0','-i','concat_list.txt','-c','copy','-movflags','+faststart','-y','joined.mp4');
+  if(plan.transition==='cut'){
+   const list=names.map(n=>"file '"+n+"'").join('\n')+'\n';
+   ffmpeg.FS('writeFile','concat_list.txt',new TextEncoder().encode(list));
+   await ffmpeg.run('-f','concat','-safe','0','-i','concat_list.txt','-c','copy','-movflags','+faststart','-y','joined.mp4');
+  }else{
+   st.textContent='FFmpeg: applying '+style+' transitions…';
+   const args=[]; names.forEach(n=>args.push('-i',n));
+   let filter='',last='[0:v]',offset=info[0].duration-plan.duration;
+   for(let i=1;i<names.length;i++){
+    const out='[v'+i+']';
+    filter+=last+'['+i+':v]xfade=transition='+plan.transition+':duration='+plan.duration+':offset='+Math.max(.01,offset).toFixed(3)+out+';';
+    last=out; offset+=info[i].duration-plan.duration;
+   }
+   filter=filter.slice(0,-1);
+   args.push('-filter_complex',filter,'-map',last,'-map','0:a?','-c:v','libx264','-pix_fmt','yuv420p','-c:a','aac','-movflags','+faststart','-y','joined.mp4');
+   await ffmpeg.run(...args);
+  }
   const out=ffmpeg.FS('readFile','joined.mp4'),copy=new Uint8Array(out.length);copy.set(out);
   finalBlob=new Blob([copy.buffer],{type:'video/mp4'});finalBlob._isMp4=true;
   if(previewUrl)try{URL.revokeObjectURL(previewUrl)}catch(e){}
-  previewUrl=URL.createObjectURL(finalBlob);v.src=previewUrl;v.load();$('previewName').textContent='FINAL VIDEO — '+files.length+' CLIPS';
-  const expected=info.length===files.length&&info.every(Boolean)?info.reduce((a,x)=>a+x.duration,0):0;
-  st.textContent='✓ FINAL MP4 COMPLETE — '+files.length+' clips'+(expected?' • expected about '+expected.toFixed(2)+'s':'')+'. Play Main Preview to verify video + audio.';
+  previewUrl=URL.createObjectURL(finalBlob);v.src=previewUrl;v.load();$('previewName').textContent='FINAL '+style.toUpperCase()+' EDIT — '+files.length+' CLIPS';
+  const total=info.reduce((a,x)=>a+x.duration,0)-plan.duration*(files.length-1);
+  st.textContent='✓ '+style.toUpperCase()+' EDIT COMPLETE — '+files.length+' clips • about '+total.toFixed(2)+'s. Play Main Preview to verify.';
   for(const n of [...names,'concat_list.txt','joined.mp4'])try{ffmpeg.FS('unlink',n)}catch(e){}
  }catch(e){st.textContent='FFmpeg build failed: '+e.message}
- $('fftest').disabled=files.length<2;
+ $('fftest').disabled=files.length<2||!style;
 }
 const $=id=>document.getElementById(id),canvas=$('c'),ctx=canvas.getContext('2d',{willReadFrequently:true});
-let files=[],info=[],style='',previewUrl=null,finalBlob=null,recordedChunks=[];const styles=['Natural / Cinematic','Action','Fantasy','Horror','Trailer','Music Video','Dreamlike','Custom'];
-function styleUI(){let r=$('styles');r.innerHTML='';styles.forEach(s=>{let b=document.createElement('button');b.textContent=s;b.className=style===s?'active':'';b.disabled=!info.length;b.onclick=()=>{style=s;styleUI();ready()};r.appendChild(b)})}
-function ready(){let ok=files.length&&info.length===files.length&&info.every(Boolean)&&style;}
+let files=[],info=[],style='',previewUrl=null,finalBlob=null,recordedChunks=[];
+const styles=['Natural / Cinematic','Action','Fantasy','Horror','Trailer','Music Video','Dreamlike','Custom'];
+const stylePlans={
+'Natural / Cinematic':{transition:'cut',duration:0,text:'Full clips • clean hard cuts • no forced effects'},
+'Action':{transition:'fade',duration:.12,text:'Full clips • very fast transitions • aggressive pacing feel'},
+'Fantasy':{transition:'fade',duration:.55,text:'Full clips • softer cinematic dissolves between scenes'},
+'Horror':{transition:'fadeblack',duration:.35,text:'Full clips • brief dark transitions for scene changes'},
+'Trailer':{transition:'fadeblack',duration:.18,text:'Full clips • punchy short dark transitions'},
+'Music Video':{transition:'fade',duration:.22,text:'Full clips • quick visual transitions between clips'},
+'Dreamlike':{transition:'fade',duration:.85,text:'Full clips • long soft dissolves'},
+'Custom':{transition:'cut',duration:0,text:'Custom starts neutral: full clips • clean cuts'}
+};
+function styleUI(){let r=$('styles');r.innerHTML='';styles.forEach(s=>{let b=document.createElement('button');b.textContent=s;b.className=style===s?'active':'';b.disabled=!info.length;b.onclick=()=>{style=s;styleUI();ready()};r.appendChild(b)});$('stylePlan').textContent=style?(style+' — '+stylePlans[style].text):'Scan clips, then choose a style.'}
+function ready(){let ok=files.length&&info.length===files.length&&info.every(Boolean)&&style;if(ffmpeg&&ffmpeg.isLoaded())$('fftest').disabled=!ok;}
 function clearPreview(){if(previewUrl){try{URL.revokeObjectURL(previewUrl)}catch(e){}}previewUrl=null;$('preview').pause();$('preview').removeAttribute('src');$('preview').load();$('previewName').textContent='No clip selected'}
 function resetFinal(){finalBlob=null}
 function showClip(i){if(previewUrl){try{URL.revokeObjectURL(previewUrl)}catch(e){}}previewUrl=URL.createObjectURL(files[i]);$('preview').src=previewUrl;$('previewName').textContent='Clip '+(i+1)+' — '+files[i].name;$('preview').load()}
