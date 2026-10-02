@@ -1,9 +1,9 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI-Assisted Video Editor V9.5</title>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI-Assisted Video Editor V9.6</title>
 <style>
 body{margin:0;background:#070b12;color:#e8f0ff;font-family:system-ui}main{max-width:1120px;margin:28px auto;padding:0 18px}h1{color:#76b5ff}.sub{color:#9fc8f7}.panel{background:#0c1524;border:1px solid #24476d;border-radius:16px;padding:16px;margin:16px 0}button,label{background:#0d3159;color:#fff;border:1px solid #3479bd;border-radius:10px;padding:11px 15px;font-weight:800;cursor:pointer;margin:4px}button:disabled{opacity:.45;cursor:not-allowed}input{display:none}video{width:100%;max-height:520px;background:#000;border-radius:10px}.preview{max-width:900px;margin:auto}.clips{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.card{background:#08111e;border:1px solid #203d5d;border-radius:12px;padding:9px;cursor:pointer}.card img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:7px;background:#000}.name{font-weight:800;font-size:13px;margin-bottom:6px}.stats{font:12px monospace;color:#c9e1ff;white-space:pre-line}.scanframes{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-top:6px}.scanframes div{position:relative}.scanframes img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:4px}.scanframes span{position:absolute;left:2px;bottom:2px;background:#000b;padding:1px 3px;border-radius:3px;font:9px monospace;color:white}.styles{display:flex;flex-wrap:wrap;gap:6px}.styles button.active{background:#2b6ca8;border-color:#76b5ff}progress{width:100%}#status{margin-top:6px}.actions{display:flex;gap:8px;flex-wrap:wrap}.step{color:#76b5ff;font-weight:800}
 </style></head><body><main>
-<h1>AI-Assisted Video Editor V9.5</h1>
+<h1>AI-Assisted Video Editor V9.6</h1>
 <div class="sub">Fresh build: add clips → scan → choose edit style → build edit → preview → export.</div>
 <div class="panel"><span class="step">1. SOURCE CLIPS</span><br><label>ADD CLIPS<input id="files" type="file" accept="video/mp4" multiple></label><button id="scan" disabled>SCAN CLIPS</button><button id="clear">CLEAR</button><div class="sub">Up to 20 MP4 clips. Source clips stay untouched.</div></div>
 <div class="panel preview"><span class="step">MAIN PREVIEW</span><div id="previewName" class="sub" style="float:right">No clip selected</div><video id="preview" controls></video></div>
@@ -17,12 +17,12 @@ body{margin:0;background:#070b12;color:#e8f0ff;font-family:system-ui}main{max-wi
 <script>
 let ffmpeg=null;
 async function loadFFmpegEngine(){
- const s=$('ffstatus'),b=$('ffload'); b.disabled=true; s.textContent='Loading FFmpeg core…';
+ const s=$('ffstatus'),b=$('ffload'); b.disabled=true; s.textContent='Loading single-thread FFmpeg core…';
  try{
   if(!window.FFmpeg)throw new Error('FFmpeg library did not load');
-  if(!ffmpeg)ffmpeg=FFmpeg.createFFmpeg({log:true,corePath:'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'});
+  if(!ffmpeg)ffmpeg=FFmpeg.createFFmpeg({log:true,corePath:'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js',mainName:'main'});
   if(!ffmpeg.isLoaded())await ffmpeg.load();
-  s.textContent='✓ FFMPEG READY'; $('fftest').disabled=files.length<2;
+  s.textContent='✓ FFMPEG READY — SINGLE THREAD / NO SharedArrayBuffer'; $('fftest').disabled=files.length<2;
  }catch(e){s.textContent='FFmpeg load failed: '+e.message;b.disabled=false}
 }
 async function testFFmpegOne(){
@@ -92,6 +92,6 @@ $('files').onchange=e=>{files=[...e.target.files].slice(0,20);info=[];style='';r
 $('clear').onclick=()=>{files=[];info=[];style='';resetFinal();$('files').value='';clearPreview();render();styleUI();$('scan').disabled=true;$('build').disabled=true;$('export').disabled=true;$('progress').value=0;$('status').textContent='Add clips to begin.';ready()};
 $('scan').onclick=async()=>{$('scan').disabled=true;info=[];$('progress').value=0;for(let i=0;i<files.length;i++){try{$('status').textContent='Scanning clip '+(i+1)+' of '+files.length+'…';info[i]=await scanOne(files[i])}catch(e){info[i]=null;$('status').textContent='Clip '+(i+1)+' failed: '+e.message} $('progress').value=(i+1)/files.length;render()}let good=info.filter(Boolean).length;$('status').textContent='Scan complete — '+good+' of '+files.length+' clips ready.';$('scan').disabled=false;styleUI();ready()};
 $('build').addEventListener('click',async(e)=>{e.preventDefault();$('editStatus').textContent='BUILD clicked — starting renderer…';try{await buildFinal()}catch(err){$('editStatus').textContent='Build error: '+(err&&err.message?err.message:String(err));$('build').disabled=false}});
-$('export').onclick=()=>{if(!finalBlob)return;let a=document.createElement('a'),u=URL.createObjectURL(finalBlob);a.href=u;a.download=finalBlob._isMp4?'AI-Assisted-Edit-V9.5.mp4':'AI-Assisted-Edit-V9.5.webm';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)};
+$('export').onclick=()=>{if(!finalBlob)return;let a=document.createElement('a'),u=URL.createObjectURL(finalBlob);a.href=u;a.download=finalBlob._isMp4?'AI-Assisted-Edit-V9.6.mp4':'AI-Assisted-Edit-V9.6.webm';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)};
 styleUI();
 </script></main></body></html>
