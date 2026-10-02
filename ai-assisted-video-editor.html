@@ -1,16 +1,16 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI-Assisted Video Editor V9.4</title>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI-Assisted Video Editor V9.5</title>
 <style>
 body{margin:0;background:#070b12;color:#e8f0ff;font-family:system-ui}main{max-width:1120px;margin:28px auto;padding:0 18px}h1{color:#76b5ff}.sub{color:#9fc8f7}.panel{background:#0c1524;border:1px solid #24476d;border-radius:16px;padding:16px;margin:16px 0}button,label{background:#0d3159;color:#fff;border:1px solid #3479bd;border-radius:10px;padding:11px 15px;font-weight:800;cursor:pointer;margin:4px}button:disabled{opacity:.45;cursor:not-allowed}input{display:none}video{width:100%;max-height:520px;background:#000;border-radius:10px}.preview{max-width:900px;margin:auto}.clips{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.card{background:#08111e;border:1px solid #203d5d;border-radius:12px;padding:9px;cursor:pointer}.card img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:7px;background:#000}.name{font-weight:800;font-size:13px;margin-bottom:6px}.stats{font:12px monospace;color:#c9e1ff;white-space:pre-line}.scanframes{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-top:6px}.scanframes div{position:relative}.scanframes img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:4px}.scanframes span{position:absolute;left:2px;bottom:2px;background:#000b;padding:1px 3px;border-radius:3px;font:9px monospace;color:white}.styles{display:flex;flex-wrap:wrap;gap:6px}.styles button.active{background:#2b6ca8;border-color:#76b5ff}progress{width:100%}#status{margin-top:6px}.actions{display:flex;gap:8px;flex-wrap:wrap}.step{color:#76b5ff;font-weight:800}
 </style></head><body><main>
-<h1>AI-Assisted Video Editor V9.4</h1>
+<h1>AI-Assisted Video Editor V9.5</h1>
 <div class="sub">Fresh build: add clips → scan → choose edit style → build edit → preview → export.</div>
 <div class="panel"><span class="step">1. SOURCE CLIPS</span><br><label>ADD CLIPS<input id="files" type="file" accept="video/mp4" multiple></label><button id="scan" disabled>SCAN CLIPS</button><button id="clear">CLEAR</button><div class="sub">Up to 20 MP4 clips. Source clips stay untouched.</div></div>
 <div class="panel preview"><span class="step">MAIN PREVIEW</span><div id="previewName" class="sub" style="float:right">No clip selected</div><video id="preview" controls></video></div>
 <div class="panel"><progress id="progress" value="0" max="1"></progress><div id="status" class="sub">Add clips to begin.</div></div>
 <div id="clips" class="clips"></div>
 <div class="panel"><span class="step">2. EDIT STYLE</span><div id="styles" class="styles"></div></div>
-<div class="panel"><span class="step">3. FFMPEG ENGINE TEST</span><div class="sub" style="margin:7px 0">Safe diagnostic: uses only Clip 1. It does not change your scanner or current build path.</div><div class="actions"><button id="ffload">LOAD FFMPEG</button><button id="fftest" disabled>TEST CLIP 1 → MP4</button></div><div id="ffstatus" class="sub">FFmpeg not loaded.</div></div>
+<div class="panel"><span class="step">3. FFMPEG ENGINE TEST</span><div class="sub" style="margin:7px 0">Safe diagnostic: loads FFmpeg, then joins Clip 1 + Clip 2 with the proven concat demuxer + stream copy method. No re-encode.</div><div class="actions"><button id="ffload">LOAD FFMPEG</button><button id="fftest" disabled>JOIN CLIP 1 + 2 → MP4</button></div><div id="ffstatus" class="sub">FFmpeg not loaded.</div></div>
 <div class="panel"><span class="step">4. BUILD FINAL EDIT</span><div class="sub" style="margin:7px 0">V9 keeps the workflow simple. Scan establishes duration and representative frames; the selected style becomes the editing instruction.</div><div class="actions"><button id="build" disabled>BUILD AI EDIT</button><button id="export" disabled>EXPORT FINAL VIDEO</button></div><div id="editStatus" class="sub">Scan clips and choose a style.</div></div>
 <canvas id="c" style="display:none"></canvas>
 <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
@@ -22,23 +22,30 @@ async function loadFFmpegEngine(){
   if(!window.FFmpeg)throw new Error('FFmpeg library did not load');
   if(!ffmpeg)ffmpeg=FFmpeg.createFFmpeg({log:true,corePath:'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'});
   if(!ffmpeg.isLoaded())await ffmpeg.load();
-  s.textContent='✓ FFMPEG READY'; $('fftest').disabled=!files.length;
+  s.textContent='✓ FFMPEG READY'; $('fftest').disabled=files.length<2;
  }catch(e){s.textContent='FFmpeg load failed: '+e.message;b.disabled=false}
 }
 async function testFFmpegOne(){
- if(!files.length||!ffmpeg||!ffmpeg.isLoaded())return;
- const s=$('ffstatus'),v=$('preview'); $('fftest').disabled=true;s.textContent='FFmpeg: writing Clip 1…';
+ if(files.length<2||!ffmpeg||!ffmpeg.isLoaded())return;
+ const s=$('ffstatus'),v=$('preview');$('fftest').disabled=true;
  try{
-  const data=await FFmpeg.fetchFile(files[0]);ffmpeg.FS('writeFile','input.mp4',data);
-  s.textContent='FFmpeg: encoding H.264 + AAC MP4…';
-  await ffmpeg.run('-i','input.mp4','-map','0:v:0','-map','0:a:0?','-c:v','libx264','-preset','veryfast','-pix_fmt','yuv420p','-c:a','aac','-b:a','192k','-movflags','+faststart','-y','ffmpeg-test.mp4');
-  const out=ffmpeg.FS('readFile','ffmpeg-test.mp4');finalBlob=new Blob([out.buffer],{type:'video/mp4'});finalBlob._isMp4=true;
+  s.textContent='FFmpeg: writing Clip 1 + Clip 2…';
+  ffmpeg.FS('writeFile','clip1.mp4',await FFmpeg.fetchFile(files[0]));
+  ffmpeg.FS('writeFile','clip2.mp4',await FFmpeg.fetchFile(files[1]));
+  ffmpeg.FS('writeFile','concat_list.txt',new TextEncoder().encode("file 'clip1.mp4'\nfile 'clip2.mp4'\n"));
+  s.textContent='FFmpeg: joining with concat + stream copy…';
+  await ffmpeg.run('-f','concat','-safe','0','-i','concat_list.txt','-c','copy','-movflags','+faststart','-y','joined.mp4');
+  const out=ffmpeg.FS('readFile','joined.mp4');
+  const copy=new Uint8Array(out.length);copy.set(out);
+  finalBlob=new Blob([copy.buffer],{type:'video/mp4'});finalBlob._isMp4=true;
   if(previewUrl)try{URL.revokeObjectURL(previewUrl)}catch(e){}
-  previewUrl=URL.createObjectURL(finalBlob);v.src=previewUrl;v.load();$('previewName').textContent='FFMPEG TEST — Clip 1 H.264/AAC MP4';$('export').disabled=false;
-  s.textContent='✓ FFMPEG TEST COMPLETE — play Main Preview and verify picture + audio.';
-  try{ffmpeg.FS('unlink','input.mp4');ffmpeg.FS('unlink','ffmpeg-test.mp4')}catch(e){}
- }catch(e){s.textContent='FFmpeg test failed: '+e.message}
- $('fftest').disabled=false;
+  previewUrl=URL.createObjectURL(finalBlob);v.src=previewUrl;v.load();
+  $('previewName').textContent='FFMPEG CONCAT TEST — Clip 1 + Clip 2';
+  $('export').disabled=false;
+  s.textContent='✓ CONCAT COMPLETE — play Main Preview. Expect about '+((info[0]?.duration||0)+(info[1]?.duration||0)).toFixed(2)+'s with original audio.';
+  for(const n of ['clip1.mp4','clip2.mp4','concat_list.txt','joined.mp4'])try{ffmpeg.FS('unlink',n)}catch(e){}
+ }catch(e){s.textContent='FFmpeg concat failed: '+e.message}
+ $('fftest').disabled=files.length<2;
 }
 const $=id=>document.getElementById(id),canvas=$('c'),ctx=canvas.getContext('2d',{willReadFrequently:true});
 let files=[],info=[],style='',previewUrl=null,finalBlob=null,recordedChunks=[];const styles=['Natural / Cinematic','Action','Fantasy','Horror','Trailer','Music Video','Dreamlike','Custom'];
@@ -81,10 +88,10 @@ function fmtTime(s){s=Math.max(0,s||0);let m=Math.floor(s/60),x=Math.floor(s%60)
 function seek(v,t){return new Promise((res,rej)=>{let timer=setTimeout(()=>rej(new Error('seek timeout')),5000);v.onseeked=()=>{clearTimeout(timer);res()};v.currentTime=t})}
 async function scanOne(f){let v=document.createElement('video'),u=URL.createObjectURL(f);v.src=u;v.muted=true;await new Promise((res,rej)=>{v.onloadedmetadata=res;v.onerror=rej});let duration=v.duration;canvas.width=320;canvas.height=Math.max(180,Math.round(320*v.videoHeight/v.videoWidth));let frames=[];for(let i=0;i<6;i++){let t=i===5?Math.max(0,duration-.05):(duration*i/5);await seek(v,Math.min(t,Math.max(0,duration-.03)));ctx.drawImage(v,0,0,canvas.width,canvas.height);frames.push({t,src:canvas.toDataURL('image/jpeg',.72)})}let thumb=frames[0].src;v.removeAttribute('src');v.load();URL.revokeObjectURL(u);return{duration,thumb,frames,scanStart:0,scanEnd:duration,points:frames.length}}
 $('ffload').onclick=loadFFmpegEngine;$('fftest').onclick=testFFmpegOne;
-$('files').onchange=e=>{files=[...e.target.files].slice(0,20);info=[];style='';resetFinal();clearPreview();render();styleUI();$('scan').disabled=!files.length;$('export').disabled=true;ready();if(ffmpeg&&ffmpeg.isLoaded())$('fftest').disabled=!files.length;$('status').textContent=files.length+' clip(s) loaded.'};
+$('files').onchange=e=>{files=[...e.target.files].slice(0,20);info=[];style='';resetFinal();clearPreview();render();styleUI();$('scan').disabled=!files.length;$('export').disabled=true;ready();if(ffmpeg&&ffmpeg.isLoaded())$('fftest').disabled=files.length<2;$('status').textContent=files.length+' clip(s) loaded.'};
 $('clear').onclick=()=>{files=[];info=[];style='';resetFinal();$('files').value='';clearPreview();render();styleUI();$('scan').disabled=true;$('build').disabled=true;$('export').disabled=true;$('progress').value=0;$('status').textContent='Add clips to begin.';ready()};
 $('scan').onclick=async()=>{$('scan').disabled=true;info=[];$('progress').value=0;for(let i=0;i<files.length;i++){try{$('status').textContent='Scanning clip '+(i+1)+' of '+files.length+'…';info[i]=await scanOne(files[i])}catch(e){info[i]=null;$('status').textContent='Clip '+(i+1)+' failed: '+e.message} $('progress').value=(i+1)/files.length;render()}let good=info.filter(Boolean).length;$('status').textContent='Scan complete — '+good+' of '+files.length+' clips ready.';$('scan').disabled=false;styleUI();ready()};
 $('build').addEventListener('click',async(e)=>{e.preventDefault();$('editStatus').textContent='BUILD clicked — starting renderer…';try{await buildFinal()}catch(err){$('editStatus').textContent='Build error: '+(err&&err.message?err.message:String(err));$('build').disabled=false}});
-$('export').onclick=()=>{if(!finalBlob)return;let a=document.createElement('a'),u=URL.createObjectURL(finalBlob);a.href=u;a.download=finalBlob._isMp4?'AI-Assisted-Edit-V9.4.mp4':'AI-Assisted-Edit-V9.4.webm';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)};
+$('export').onclick=()=>{if(!finalBlob)return;let a=document.createElement('a'),u=URL.createObjectURL(finalBlob);a.href=u;a.download=finalBlob._isMp4?'AI-Assisted-Edit-V9.5.mp4':'AI-Assisted-Edit-V9.5.webm';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),3000)};
 styleUI();
 </script></main></body></html>
