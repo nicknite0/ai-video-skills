@@ -10,7 +10,7 @@ body{margin:0;background:#070b12;color:#e8f0ff;font-family:system-ui}main{max-wi
 <div class="panel"><progress id="progress" value="0" max="1"></progress><div id="status" class="sub">Add clips to begin.</div></div>
 <div id="clips" class="clips"></div>
 <div class="panel"><span class="step">2. EDIT STYLE</span><div id="styles" class="styles"></div></div>
-<div class="panel"><span class="step">3. FFMPEG ENGINE TEST</span><div class="sub" style="margin:7px 0">Safe diagnostic: loads FFmpeg, then joins Clip 1 + Clip 2 with the proven concat demuxer + stream copy method. No re-encode.</div><div class="actions"><button id="ffload">LOAD FFMPEG</button><button id="fftest" disabled>JOIN CLIP 1 + 2 → MP4</button></div><div id="ffstatus" class="sub">FFmpeg not loaded.</div></div>
+<div class="panel"><span class="step">3. FFMPEG ENGINE TEST</span><div class="sub" style="margin:7px 0">FFmpeg joins every loaded clip in order into one MP4 using concat + stream copy. Up to 20 clips. No re-encode when source streams are compatible.</div><div class="actions"><button id="ffload">LOAD FFMPEG</button><button id="fftest" disabled>BUILD FINAL VIDEO — UP TO 20 CLIPS</button></div><div id="ffstatus" class="sub">FFmpeg not loaded.</div></div>
 <canvas id="c" style="display:none"></canvas>
 <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 <script>
@@ -26,24 +26,23 @@ async function loadFFmpegEngine(){
 }
 async function testFFmpegOne(){
  if(files.length<2||!ffmpeg||!ffmpeg.isLoaded())return;
- const s=$('ffstatus'),v=$('preview');$('fftest').disabled=true;
+ const st=$('ffstatus'),v=$('preview');$('fftest').disabled=true;
+ const names=[];
  try{
-  s.textContent='FFmpeg: writing Clip 1 + Clip 2…';
-  ffmpeg.FS('writeFile','clip1.mp4',await FFmpeg.fetchFile(files[0]));
-  ffmpeg.FS('writeFile','clip2.mp4',await FFmpeg.fetchFile(files[1]));
-  ffmpeg.FS('writeFile','concat_list.txt',new TextEncoder().encode("file 'clip1.mp4'\nfile 'clip2.mp4'\n"));
-  s.textContent='FFmpeg: joining with concat + stream copy…';
+  st.textContent='FFmpeg: loading '+files.length+' clips…';
+  for(let i=0;i<files.length;i++){const n='clip'+(i+1)+'.mp4';names.push(n);ffmpeg.FS('writeFile',n,await FFmpeg.fetchFile(files[i]));}
+  const list=names.map(n=>"file '"+n+"'").join('\n')+'\n';
+  ffmpeg.FS('writeFile','concat_list.txt',new TextEncoder().encode(list));
+  st.textContent='FFmpeg: joining '+files.length+' clips with stream copy…';
   await ffmpeg.run('-f','concat','-safe','0','-i','concat_list.txt','-c','copy','-movflags','+faststart','-y','joined.mp4');
-  const out=ffmpeg.FS('readFile','joined.mp4');
-  const copy=new Uint8Array(out.length);copy.set(out);
+  const out=ffmpeg.FS('readFile','joined.mp4'),copy=new Uint8Array(out.length);copy.set(out);
   finalBlob=new Blob([copy.buffer],{type:'video/mp4'});finalBlob._isMp4=true;
   if(previewUrl)try{URL.revokeObjectURL(previewUrl)}catch(e){}
-  previewUrl=URL.createObjectURL(finalBlob);v.src=previewUrl;v.load();
-  $('previewName').textContent='FFMPEG CONCAT TEST — Clip 1 + Clip 2';
-  
-  s.textContent='✓ CONCAT COMPLETE — play Main Preview. Expect about '+((info[0]?.duration||0)+(info[1]?.duration||0)).toFixed(2)+'s with original audio.';
-  for(const n of ['clip1.mp4','clip2.mp4','concat_list.txt','joined.mp4'])try{ffmpeg.FS('unlink',n)}catch(e){}
- }catch(e){s.textContent='FFmpeg concat failed: '+e.message}
+  previewUrl=URL.createObjectURL(finalBlob);v.src=previewUrl;v.load();$('previewName').textContent='FINAL VIDEO — '+files.length+' CLIPS';
+  const expected=info.length===files.length&&info.every(Boolean)?info.reduce((a,x)=>a+x.duration,0):0;
+  st.textContent='✓ FINAL MP4 COMPLETE — '+files.length+' clips'+(expected?' • expected about '+expected.toFixed(2)+'s':'')+'. Play Main Preview to verify video + audio.';
+  for(const n of [...names,'concat_list.txt','joined.mp4'])try{ffmpeg.FS('unlink',n)}catch(e){}
+ }catch(e){st.textContent='FFmpeg build failed: '+e.message}
  $('fftest').disabled=files.length<2;
 }
 const $=id=>document.getElementById(id),canvas=$('c'),ctx=canvas.getContext('2d',{willReadFrequently:true});
