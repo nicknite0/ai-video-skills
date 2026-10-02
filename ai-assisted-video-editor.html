@@ -17,7 +17,7 @@ const $=id=>document.getElementById(id),canvas=$('c'),ctx=canvas.getContext('2d'
 let files=[],info=[],style='',previewUrl=null,finalBlob=null,ffmpeg=null;const styles=['Natural / Cinematic','Action','Fantasy','Horror','Trailer','Music Video','Dreamlike','Custom'];
 function styleUI(){let r=$('styles');r.innerHTML='';styles.forEach(s=>{let b=document.createElement('button');b.textContent=s;b.className=style===s?'active':'';b.disabled=!info.length;b.onclick=()=>{style=s;styleUI();ready()};r.appendChild(b)})}
 function ready(){let ok=files.length&&info.length===files.length&&info.every(Boolean)&&style;$('build').disabled=!ok;$('editStatus').textContent=ok?'Ready: '+files.length+' clips • '+style+'.':'Scan clips and choose a style.'}
-function clearPreview(){if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;$('preview').removeAttribute('src');$('preview').load();$('previewName').textContent='No clip selected'}
+function clearPreview(){if(previewUrl){try{URL.revokeObjectURL(previewUrl)}catch(e){}}previewUrl=null;$('preview').pause();$('preview').removeAttribute('src');$('preview').load();$('previewName').textContent='No clip selected'}
 function resetFinal(){finalBlob=null;$('export').disabled=true}
 async function buildFinal(){
   if(!files.length)return;
@@ -51,17 +51,17 @@ async function buildFinal(){
     }
     const data=ffmpeg.FS('readFile','final.mp4');
     finalBlob=new Blob([data.buffer],{type:'video/mp4'});
-    clearPreview();previewUrl=URL.createObjectURL(finalBlob);$('preview').src=previewUrl;$('previewName').textContent='FINAL EDIT — '+style;$('preview').load();
+    if(previewUrl){try{URL.revokeObjectURL(previewUrl)}catch(e){}}previewUrl=URL.createObjectURL(finalBlob);$('preview').src=previewUrl;$('previewName').textContent='FINAL EDIT — '+style;$('preview').load();
     $('export').disabled=false;$('editStatus').textContent='Final edit ready in Main Preview — '+files.length+' clips • '+style+'.';
     [...names,'list.txt','list2.txt','final.mp4'].forEach(n=>{try{ffmpeg.FS('unlink',n)}catch(e){}});
     for(let i=0;i<files.length;i++){try{ffmpeg.FS('unlink','norm'+i+'.mp4')}catch(e){}}
   }catch(e){$('editStatus').textContent='Render failed: '+e.message}
   ready(); if(finalBlob)$('export').disabled=false;
 }
-function showClip(i){clearPreview();previewUrl=URL.createObjectURL(files[i]);$('preview').src=previewUrl;$('previewName').textContent='Clip '+(i+1)+' — '+files[i].name}
+function showClip(i){if(previewUrl){try{URL.revokeObjectURL(previewUrl)}catch(e){}}previewUrl=URL.createObjectURL(files[i]);$('preview').src=previewUrl;$('previewName').textContent='Clip '+(i+1)+' — '+files[i].name;$('preview').load()}
 function render(){let r=$('clips');r.innerHTML='';files.forEach((f,i)=>{let d=document.createElement('div');d.className='card';d.onclick=()=>showClip(i);d.innerHTML='<div class="name">Clip '+(i+1)+' — '+f.name+'</div>';let im=document.createElement('img');if(info[i])im.src=info[i].thumb;d.appendChild(im);let st=document.createElement('div');st.className='stats';st.textContent=info[i]?'Duration '+info[i].duration.toFixed(2)+'s\nScanned':'Waiting for scan';d.appendChild(st);r.appendChild(d)})}
 function seek(v,t){return new Promise((res,rej)=>{let timer=setTimeout(()=>rej(new Error('seek timeout')),5000);v.onseeked=()=>{clearTimeout(timer);res()};v.currentTime=t})}
-async function scanOne(f){let v=document.createElement('video'),u=URL.createObjectURL(f);v.src=u;v.muted=true;await new Promise((res,rej)=>{v.onloadedmetadata=res;v.onerror=rej});let duration=v.duration;await seek(v,Math.min(.15,duration-.03));canvas.width=320;canvas.height=Math.max(180,Math.round(320*v.videoHeight/v.videoWidth));ctx.drawImage(v,0,0,canvas.width,canvas.height);let thumb=canvas.toDataURL('image/jpeg',.8);URL.revokeObjectURL(u);return{duration,thumb}}
+async function scanOne(f){let v=document.createElement('video'),u=URL.createObjectURL(f);v.src=u;v.muted=true;await new Promise((res,rej)=>{v.onloadedmetadata=res;v.onerror=rej});let duration=v.duration;await seek(v,Math.min(.15,duration-.03));canvas.width=320;canvas.height=Math.max(180,Math.round(320*v.videoHeight/v.videoWidth));ctx.drawImage(v,0,0,canvas.width,canvas.height);let thumb=canvas.toDataURL('image/jpeg',.8);v.removeAttribute('src');v.load();URL.revokeObjectURL(u);return{duration,thumb}}
 $('files').onchange=e=>{files=[...e.target.files].slice(0,20);info=[];style='';resetFinal();clearPreview();render();styleUI();$('scan').disabled=!files.length;$('export').disabled=true;ready();$('status').textContent=files.length+' clip(s) loaded.'};
 $('clear').onclick=()=>{files=[];info=[];style='';resetFinal();$('files').value='';clearPreview();render();styleUI();$('scan').disabled=true;$('build').disabled=true;$('export').disabled=true;$('progress').value=0;$('status').textContent='Add clips to begin.';ready()};
 $('scan').onclick=async()=>{$('scan').disabled=true;info=[];$('progress').value=0;for(let i=0;i<files.length;i++){try{$('status').textContent='Scanning clip '+(i+1)+' of '+files.length+'…';info[i]=await scanOne(files[i])}catch(e){info[i]=null;$('status').textContent='Clip '+(i+1)+' failed: '+e.message} $('progress').value=(i+1)/files.length;render()}let good=info.filter(Boolean).length;$('status').textContent='Scan complete — '+good+' of '+files.length+' clips ready.';$('scan').disabled=false;styleUI();ready()};
