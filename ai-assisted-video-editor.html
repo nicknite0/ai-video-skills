@@ -16,7 +16,7 @@ body{margin:0;background:#070b12;color:#e8f0ff;font-family:system-ui}main{max-wi
 const $=id=>document.getElementById(id),canvas=$('c'),ctx=canvas.getContext('2d',{willReadFrequently:true});
 let files=[],info=[],style='',previewUrl=null,finalBlob=null,ffmpeg=null;const styles=['Natural / Cinematic','Action','Fantasy','Horror','Trailer','Music Video','Dreamlike','Custom'];
 function styleUI(){let r=$('styles');r.innerHTML='';styles.forEach(s=>{let b=document.createElement('button');b.textContent=s;b.className=style===s?'active':'';b.disabled=!info.length;b.onclick=()=>{style=s;styleUI();ready()};r.appendChild(b)})}
-function ready(){let ok=files.length&&info.length===files.length&&info.every(Boolean)&&style;$('build').disabled=!ok;$('editStatus').textContent=ok?'Ready: '+files.length+' clips • '+style+'.':'Scan clips and choose a style.'}
+function ready(){let ok=files.length&&info.length===files.length&&info.every(Boolean)&&style;$('build').disabled=!ok;if(!finalBlob)$('editStatus').textContent=ok?'Ready: '+files.length+' clips • '+style+'.':'Scan clips and choose a style.'}
 function clearPreview(){if(previewUrl){try{URL.revokeObjectURL(previewUrl)}catch(e){}}previewUrl=null;$('preview').pause();$('preview').removeAttribute('src');$('preview').load();$('previewName').textContent='No clip selected'}
 function resetFinal(){finalBlob=null;$('export').disabled=true}
 async function buildFinal(){
@@ -24,7 +24,7 @@ async function buildFinal(){
   $('build').disabled=true;$('export').disabled=true;
   $('editStatus').textContent='Loading render engine…';
   try{
-    if(!window.FFmpeg)throw new Error('FFmpeg library did not load. Refresh and try again.');
+    if(!window.FFmpeg)throw new Error('FFmpeg library did not load from CDN.');
     const {createFFmpeg,fetchFile}=FFmpeg;
     if(!ffmpeg){ffmpeg=createFFmpeg({log:false});await ffmpeg.load()}
     const names=[];
@@ -65,7 +65,7 @@ async function scanOne(f){let v=document.createElement('video'),u=URL.createObje
 $('files').onchange=e=>{files=[...e.target.files].slice(0,20);info=[];style='';resetFinal();clearPreview();render();styleUI();$('scan').disabled=!files.length;$('export').disabled=true;ready();$('status').textContent=files.length+' clip(s) loaded.'};
 $('clear').onclick=()=>{files=[];info=[];style='';resetFinal();$('files').value='';clearPreview();render();styleUI();$('scan').disabled=true;$('build').disabled=true;$('export').disabled=true;$('progress').value=0;$('status').textContent='Add clips to begin.';ready()};
 $('scan').onclick=async()=>{$('scan').disabled=true;info=[];$('progress').value=0;for(let i=0;i<files.length;i++){try{$('status').textContent='Scanning clip '+(i+1)+' of '+files.length+'…';info[i]=await scanOne(files[i])}catch(e){info[i]=null;$('status').textContent='Clip '+(i+1)+' failed: '+e.message} $('progress').value=(i+1)/files.length;render()}let good=info.filter(Boolean).length;$('status').textContent='Scan complete — '+good+' of '+files.length+' clips ready.';$('scan').disabled=false;styleUI();ready()};
-$('build').onclick=buildFinal;
+$('build').addEventListener('click',async(e)=>{e.preventDefault();$('editStatus').textContent='BUILD clicked — starting renderer…';try{await buildFinal()}catch(err){$('editStatus').textContent='Build error: '+(err&&err.message?err.message:String(err));$('build').disabled=false}});
 $('export').onclick=()=>{if(!finalBlob)return;let a=document.createElement('a');let u=URL.createObjectURL(finalBlob);a.href=u;a.download='AI-Assisted-Edit-V9.mp4';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)};
 styleUI();
 </script></main></body></html>
