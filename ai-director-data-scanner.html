@@ -27,7 +27,7 @@ let abstractData=shotAnalysis.map((s,i)=>{
 window.abstractDirectorData=abstractData;
 let relationCounts={};abstractData.forEach(d=>{if(d.causeEffect!=='NO CLEAR CHANGE')relationCounts[d.causeEffect]=(relationCounts[d.causeEffect]||0)+1});
 let evidence=Object.entries(relationCounts).sort((a,b)=>b[1]-a[1]);
-let a=observations[i-1],b=observations[i];if(a.text!==b.text)beats.push({t:b.t,from:a.text,to:b.text})}
+let beats=[];for(let i=1;i<observations.length;i++){let a=observations[i-1],b=observations[i];if(a.text!==b.text)beats.push({t:b.t,from:a.text,to:b.text})}
 let intervals=beats.length?beats.map((b,i)=>i?b.t-beats[i-1].t:b.t):[];
 let avg=intervals.length?intervals.reduce((a,b)=>a+b,0)/intervals.length:0;
 let patterns=[];
