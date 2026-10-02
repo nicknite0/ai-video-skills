@@ -10,8 +10,9 @@ body{margin:0;background:#070b12;color:#e8f0ff;font-family:system-ui}main{max-wi
 <div class="panel"><progress id="progress" value="0" max="1"></progress><div id="status" class="sub">Add clips to begin.</div></div>
 <div id="clips" class="clips"></div>
 <div class="panel"><span class="step">2. EDIT STYLE</span><div id="styles" class="styles"></div><div id="stylePlan" class="sub" style="margin-top:10px">Scan clips, then choose a style.</div></div>
-<div class="panel"><span class="step">3. AI EDIT PLAN</span><div id="editPlan" class="sub" style="margin-top:8px">Scan clips and choose an edit style to create a plan.</div></div>
-<div class="panel"><span class="step">4. BUILD EDIT</span><div class="sub" style="margin:7px 0">Stable build mode: selected style is recorded with the edit, while FFmpeg preserves full clips and clean cuts. Transition rendering will be added after the stable engine is locked.</div><div class="actions"><button id="ffload">LOAD FFMPEG</button><button id="fftest" disabled>BUILD FINAL VIDEO — UP TO 20 CLIPS</button></div><div id="ffstatus" class="sub">FFmpeg not loaded.</div></div>
+<div class="panel"><span class="step">3. AI CLIP UNDERSTANDING</span><div class="actions"><button id="aivision" disabled>ANALYZE CLIPS WITH AI</button></div><div id="aistatus" class="sub">Run the visual scan first. AI analysis is a separate semantic pass.</div></div>
+<div class="panel"><span class="step">4. AI EDIT PLAN</span><div id="editPlan" class="sub" style="margin-top:8px">Scan clips and choose an edit style to create a plan.</div></div>
+<div class="panel"><span class="step">5. BUILD EDIT</span><div class="sub" style="margin:7px 0">Stable build mode: selected style is recorded with the edit, while FFmpeg preserves full clips and clean cuts. Transition rendering will be added after the stable engine is locked.</div><div class="actions"><button id="ffload">LOAD FFMPEG</button><button id="fftest" disabled>BUILD FINAL VIDEO — UP TO 20 CLIPS</button></div><div id="ffstatus" class="sub">FFmpeg not loaded.</div></div>
 <canvas id="c" style="display:none"></canvas>
 <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 <script>
@@ -53,7 +54,7 @@ async function testFFmpegOne(){
  $('fftest').disabled=files.length<2||!style;
 }
 const $=id=>document.getElementById(id),canvas=$('c'),ctx=canvas.getContext('2d',{willReadFrequently:true});
-let files=[],info=[],style='',previewUrl=null,finalBlob=null,recordedChunks=[];
+let files=[],info=[],style='',previewUrl=null,finalBlob=null,recordedChunks=[],aiVision=null,aiBusy=false;
 const styles=['Natural / Cinematic','Action','Fantasy','Horror','Trailer','Music Video','Dreamlike','Custom'];
 const stylePlans={
 'Natural / Cinematic':{transition:'cut',duration:0,text:'Full clips • clean hard cuts • no forced effects'},
@@ -68,14 +69,16 @@ const stylePlans={
 function styleUI(){let r=$('styles');r.innerHTML='';styles.forEach(s=>{let b=document.createElement('button');b.textContent=s;b.className=style===s?'active':'';b.disabled=!info.length;b.onclick=()=>{style=s;styleUI();renderEditPlan();ready()};r.appendChild(b)});$('stylePlan').textContent=style?(style+' — '+stylePlans[style].text):'Scan clips, then choose a style.'}
 function clipVisualSummary(x,i){
  if(!x||!x.frames||!x.frames.length)return 'No visual samples available.';
- return '6 visual checkpoints across the full '+x.duration.toFixed(2)+'s clip. Visual-only scan; dialogue and story meaning are not yet analyzed.';
+ if(x.ai&&x.ai.length)return '<b>AI visual read:</b> '+x.ai.join(' → ');
+ return '6 visual checkpoints across the full '+x.duration.toFixed(2)+'s clip. AI semantic pass not run yet.';
 }
 function renderEditPlan(){
  const p=$('editPlan');if(!p)return;
  if(!info.length||!style){p.textContent='Scan clips and choose an edit style to create a plan.';return}
  const good=info.filter(Boolean);if(!good.length){p.textContent='No scanned clips available.';return}
  const plan=stylePlans[style],total=good.reduce((a,x)=>a+x.duration,0);
- let h='<b>'+style.toUpperCase()+' — FIRST-PASS EDIT PLAN</b><div class="sub" style="margin-top:5px">This plan is based on the current 6-frame visual scan. It does not claim to understand dialogue or unseen action between samples yet.</div><div class="planGrid">';
+ const aiReady=good.every(x=>x.ai&&x.ai.length);
+ let h='<b>'+style.toUpperCase()+' — FIRST-PASS EDIT PLAN</b><div class="sub" style="margin-top:5px">'+(aiReady?'AI has semantically described representative frames from every clip. Audio/dialogue are still not analyzed.':'Run ANALYZE CLIPS WITH AI to add semantic visual descriptions before judging the edit.')+'</div><div class="planGrid">';
  good.forEach((x,i)=>{h+='<div class="planRow"><b>Clip '+(i+1)+'</b><span class="planTag">KEEP FULL '+x.duration.toFixed(2)+'s</span><br>'+clipVisualSummary(x,i)+'</div>'});
  h+='</div><div style="margin-top:9px"><b>Style direction:</b> '+plan.text+'<br><b>Estimated final:</b> '+fmtTime(total)+' ('+total.toFixed(2)+'s)<br><b>Confidence:</b> LOW for semantic editing — current scan verifies visual coverage, not story understanding.</div>';
  p.innerHTML=h;
@@ -87,11 +90,31 @@ function showClip(i){if(previewUrl){try{URL.revokeObjectURL(previewUrl)}catch(e)
 function render(){let r=$('clips');r.innerHTML='';files.forEach((f,i)=>{let d=document.createElement('div');d.className='card';d.onclick=()=>showClip(i);d.innerHTML='<div class="name">Clip '+(i+1)+' — '+f.name+'</div>';let im=document.createElement('img');if(info[i])im.src=info[i].thumb;d.appendChild(im);let st=document.createElement('div');st.className='stats';st.textContent=info[i]?'Duration '+info[i].duration.toFixed(2)+'s\n✓ FULL SCAN — '+info[i].points+'/6 points checked — 0:00 to '+fmtTime(info[i].duration):'Waiting for scan';d.appendChild(st);if(info[i]&&info[i].frames){let sf=document.createElement('div');sf.className='scanframes';info[i].frames.forEach(x=>{let w=document.createElement('div'),fi=document.createElement('img'),lab=document.createElement('span');fi.src=x.src;lab.textContent=fmtTime(x.t);w.append(fi,lab);sf.appendChild(w)});d.appendChild(sf)}r.appendChild(d)})}
 function fmtTime(s){s=Math.max(0,s||0);let m=Math.floor(s/60),x=Math.floor(s%60);return m+':'+String(x).padStart(2,'0')}
 function seek(v,t){return new Promise((res,rej)=>{let timer=setTimeout(()=>rej(new Error('seek timeout')),5000);v.onseeked=()=>{clearTimeout(timer);res()};v.currentTime=t})}
-async function scanOne(f){let v=document.createElement('video'),u=URL.createObjectURL(f);v.src=u;v.muted=true;await new Promise((res,rej)=>{v.onloadedmetadata=res;v.onerror=rej});let duration=v.duration;canvas.width=320;canvas.height=Math.max(180,Math.round(320*v.videoHeight/v.videoWidth));let frames=[];for(let i=0;i<6;i++){let t=i===5?Math.max(0,duration-.05):(duration*i/5);await seek(v,Math.min(t,Math.max(0,duration-.03)));ctx.drawImage(v,0,0,canvas.width,canvas.height);frames.push({t,src:canvas.toDataURL('image/jpeg',.72)})}let thumb=frames[0].src;v.removeAttribute('src');v.load();URL.revokeObjectURL(u);return{duration,thumb,frames,scanStart:0,scanEnd:duration,points:frames.length}}
-$('ffload').onclick=loadFFmpegEngine;$('fftest').onclick=testFFmpegOne;
-$('files').onchange=e=>{files=[...e.target.files].slice(0,20);info=[];style='';resetFinal();renderEditPlan();clearPreview();render();styleUI();$('scan').disabled=!files.length;ready();if(ffmpeg&&ffmpeg.isLoaded())$('fftest').disabled=files.length<2;$('status').textContent=files.length+' clip(s) loaded.'};
-$('clear').onclick=()=>{files=[];info=[];style='';resetFinal();renderEditPlan();$('files').value='';clearPreview();render();styleUI();$('scan').disabled=true;$('progress').value=0;$('status').textContent='Add clips to begin.';ready()};
-$('scan').onclick=async()=>{$('scan').disabled=true;info=[];$('progress').value=0;for(let i=0;i<files.length;i++){try{$('status').textContent='Scanning clip '+(i+1)+' of '+files.length+'…';info[i]=await scanOne(files[i])}catch(e){info[i]=null;$('status').textContent='Clip '+(i+1)+' failed: '+e.message} $('progress').value=(i+1)/files.length;render()}let good=info.filter(Boolean).length;$('status').textContent='Scan complete — '+good+' of '+files.length+' clips ready.';$('scan').disabled=false;styleUI();renderEditPlan();ready()};
+async function scanOne(f){let v=document.createElement('video'),u=URL.createObjectURL(f);v.src=u;v.muted=true;await new Promise((res,rej)=>{v.onloadedmetadata=res;v.onerror=rej});let duration=v.duration;canvas.width=320;canvas.height=Math.max(180,Math.round(320*v.videoHeight/v.videoWidth));let frames=[];for(let i=0;i<6;i++){let t=i===5?Math.max(0,duration-.05):(duration*i/5);await seek(v,Math.min(t,Math.max(0,duration-.03)));ctx.drawImage(v,0,0,canvas.width,canvas.height);frames.push({t,src:canvas.toDataURL('image/jpeg',.72)})}let thumb=frames[0].src;v.removeAttribute('src');v.load();URL.revokeObjectURL(u);return{duration,thumb,frames,scanStart:0,scanEnd:duration,points:frames.length,ai:null}}
+
+async function analyzeClipsAI(){
+ if(aiBusy||!info.length)return; aiBusy=true;const b=$('aivision'),s=$('aistatus');b.disabled=true;
+ try{
+  s.textContent='Loading browser AI vision model… first load can take a while.';
+  if(!aiVision){
+   const mod=await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+   aiVision=await mod.pipeline('image-to-text','Xenova/vit-gpt2-image-captioning');
+  }
+  for(let i=0;i<info.length;i++){
+   if(!info[i])continue;s.textContent='AI analyzing clip '+(i+1)+' of '+info.length+'…';
+   const picks=[info[i].frames[0],info[i].frames[2],info[i].frames[4],info[i].frames[5]];
+   const reads=[];
+   for(const p of picks){const out=await aiVision(p.src,{max_new_tokens:28});if(out&&out[0]&&out[0].generated_text)reads.push(out[0].generated_text.trim())}
+   info[i].ai=reads;render();renderEditPlan();await new Promise(r=>setTimeout(r,0));
+  }
+  s.textContent='✓ AI VISUAL UNDERSTANDING COMPLETE — representative frames from '+info.filter(Boolean).length+' clips described. Audio/dialogue not analyzed.';
+ }catch(e){s.textContent='AI analysis failed: '+e.message}
+ aiBusy=false;b.disabled=!info.length;
+}
+$('ffload').onclick=loadFFmpegEngine;$('fftest').onclick=testFFmpegOne;$('aivision').onclick=analyzeClipsAI;
+$('files').onchange=e=>{files=[...e.target.files].slice(0,20);info=[];style='';resetFinal();renderEditPlan();clearPreview();render();styleUI();$('scan').disabled=!files.length;$('aivision').disabled=true;ready();if(ffmpeg&&ffmpeg.isLoaded())$('fftest').disabled=files.length<2;$('status').textContent=files.length+' clip(s) loaded.'};
+$('clear').onclick=()=>{files=[];info=[];style='';resetFinal();renderEditPlan();$('files').value='';clearPreview();render();styleUI();$('scan').disabled=true;$('aivision').disabled=true;$('progress').value=0;$('status').textContent='Add clips to begin.';ready()};
+$('scan').onclick=async()=>{$('scan').disabled=true;info=[];$('progress').value=0;for(let i=0;i<files.length;i++){try{$('status').textContent='Scanning clip '+(i+1)+' of '+files.length+'…';info[i]=await scanOne(files[i])}catch(e){info[i]=null;$('status').textContent='Clip '+(i+1)+' failed: '+e.message} $('progress').value=(i+1)/files.length;render()}let good=info.filter(Boolean).length;$('status').textContent='Scan complete — '+good+' of '+files.length+' clips ready.';$('scan').disabled=false;$('aivision').disabled=!good;styleUI();renderEditPlan();ready()};
 
 styleUI();
 </script></main></body></html>
