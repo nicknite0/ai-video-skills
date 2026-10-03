@@ -1,37 +1,21 @@
 export default async function handler(req,res){
-  if(req.method!=='POST') return res.status(405).json({error:'POST only'});
-  try{
-    const key=process.env.ANTHROPIC_API_KEY;
-    if(!key) return res.status(500).json({error:'ANTHROPIC_API_KEY is not configured on the server.'});
-    const {image,mediaType}=req.body||{};
-    if(!image) return res.status(400).json({error:'Missing image'});
-    const prompt=`Analyze this reference image for an AI video prompt. Be highly detailed but only describe visually supportable information. Do not invent story, identity, dialogue, audio, motives, or unseen facts.
-
-Return plain text using EXACTLY these headings:
-[VISIBLE SUMMARY]
-[CHARACTER / SUBJECT]
-[FACE / HAIR]
-[CLOTHING / ACCESSORIES]
-[POSE / PERFORMANCE]
-[LOCATION / ENVIRONMENT]
-[OBJECTS / PROPS]
-[CAMERA / COMPOSITION]
-[LIGHTING / COLOR]
-[STYLE / MATERIALS]
-[SPATIAL RELATIONSHIPS]
-[CONTINUITY ANCHORS]
-[UNCERTAIN / DO NOT ASSUME]
-
-Under each heading give concise but detailed prompt-ready observations. If a detail is uncertain, say uncertain rather than guessing.`;
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{
-      'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'
-    },body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1800,messages:[{role:'user',content:[
-      {type:'image',source:{type:'base64',media_type:mediaType||'image/jpeg',data:image}},
-      {type:'text',text:prompt}
-    ]}]})});
-    const data=await r.json();
-    if(!r.ok) return res.status(r.status).json({error:data?.error?.message||'Anthropic request failed'});
-    const text=(data.content||[]).filter(x=>x.type==='text').map(x=>x.text).join('\n');
-    return res.status(200).json({text});
-  }catch(e){return res.status(500).json({error:e.message||String(e)})}
+ if(req.method!=='POST')return res.status(405).json({error:'POST only'});
+ try{
+  const key=process.env.ANTHROPIC_API_KEY;if(!key)return res.status(500).json({error:'ANTHROPIC_API_KEY is not configured on the server.'});
+  const body=req.body||{}; const mode=body.mode||'scan';
+  let content,max_tokens=2400;
+  if(mode==='compile'){
+   if(!body.scanData)return res.status(400).json({error:'Missing scan data'});
+   const prompt='Compile the supplied reference-image analysis and user action into a clean AI-video prompt. Use the scan facts as ground truth. Use the existing [SHOT PLAN] as a menu, selecting/adapting only useful shots. Do not include research uncertainty chatter in the finished prompt. Do not invent new major characters, props, locations, dialogue, audio, or story facts. Use SHOT 1, SHOT 2, etc., NEVER timestamps. Each shot must contain a [CAMERA / DIRECTING] line, then visible action. Add (PERFORMANCE / BODY DETAIL) only when useful and {ENVIRONMENT / VFX RESPONSE} only when useful. Every shot continues from the state created by the prior shot. For physical interaction preserve cause -> response -> consequence -> continuation; for quiet/solo scenes never inject combat behavior. Return ONLY these sections: [SCENE FOUNDATION], [CONTINUITY ANCHORS], [SHOT SEQUENCE], [AUDIO], [ENDING], [CONSTRAINTS]. AUDIO must say no added audio unless explicitly requested by the user.\n\nSCAN DATA:\n'+body.scanData+'\n\nUSER ACTION:\n'+(body.action||'Subtle natural continuation from the reference image.');
+   content=[{type:'text',text:prompt}];max_tokens=2200;
+  }else{
+   if(!body.image)return res.status(400).json({error:'Missing image'});
+   const prompt='Analyze this reference image for AI video generation. Be highly detailed but only describe visually supportable information. Do not invent story, identity, dialogue, audio, motives, or unseen facts. Return plain text using EXACTLY these headings in this exact order:\n[VISIBLE SUMMARY]\n[CHARACTER / SUBJECT]\n[FACE / HAIR]\n[CLOTHING / ACCESSORIES]\n[POSE / PERFORMANCE]\n[LOCATION / ENVIRONMENT]\n[OBJECTS / PROPS]\n[CAMERA / COMPOSITION]\n[LIGHTING / COLOR]\n[STYLE / MATERIALS]\n[SPATIAL RELATIONSHIPS]\n[CONTINUITY ANCHORS]\n[UNCERTAIN / DO NOT ASSUME]\n[SHOT PLAN]\n\nUnder [SHOT PLAN] you MUST provide 3-6 shot opportunities derived from the visible image. Use SHOT 1, SHOT 2, etc., never timestamps. SHOT 1 should preserve or closely match the reference composition. Other shots may suggest tighter/wider/profile/over-shoulder/detail/subject-environment coverage or controlled camera movement only where visually supported. Do not invent story action. Every shot must include [CAMERA / DIRECTING] and explain what visible information it can emphasize. Mark nonessential shots OPTIONAL. This is a menu for a later action compiler, not a required sequence.';
+   content=[{type:'image',source:{type:'base64',media_type:body.mediaType||'image/jpeg',data:body.image}},{type:'text',text:prompt}];
+  }
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens,messages:[{role:'user',content}]})});
+  const data=await r.json();if(!r.ok)return res.status(r.status).json({error:data?.error?.message||'Anthropic request failed'});
+  const text=(data.content||[]).filter(x=>x.type==='text').map(x=>x.text).join('\n');
+  return res.status(200).json({text,mode});
+ }catch(e){return res.status(500).json({error:e.message||String(e)})}
 }
