@@ -11,7 +11,37 @@ export default async function handler(req,res){
    content=[{type:'text',text:prompt}];max_tokens=2200;
   }else{
    if(!body.image)return res.status(400).json({error:'Missing image'});
-   const prompt='Analyze this reference image for AI video generation. Be highly detailed but only describe visually supportable information. Do not invent story, identity, dialogue, audio, motives, or unseen facts. Return plain text using EXACTLY these headings in this exact order:\n[VISIBLE SUMMARY]\n[CHARACTER / SUBJECT]\n[FACE / HAIR]\n[CLOTHING / ACCESSORIES]\n[POSE / PERFORMANCE]\n[LOCATION / ENVIRONMENT]\n[OBJECTS / PROPS]\n[CAMERA / COMPOSITION]\n[LIGHTING / COLOR]\n[STYLE / MATERIALS]\n[SPATIAL RELATIONSHIPS]\n[VISUAL MEDIUM / STYLE LOCK]\n[PRIMARY SUBJECT IDENTITY LOCK]\n[STARTING STATE]\n[BACKGROUND SUBJECT SEPARATION]\n[CONTINUITY ANCHORS]\n[UNCERTAIN / DO NOT ASSUME]\n[SHOT PLAN]\n\nUnder [VISUAL MEDIUM / STYLE LOCK], classify the visible image medium/style from evidence only (for example photorealistic live-action photography, realistic CGI/3D render, stylized 3D animation, 2D anime, cartoon, comic/graphic illustration, painterly art, watercolor, stop-motion/clay, pixel art, or another clearly supported medium). Describe the rendering traits that must remain stable: anatomy/proportions, linework if present, shading, skin/surface treatment, material response, lighting, lens/depth behavior, texture, color treatment, and background rendering. Explicitly state which nearby media it must NOT drift into when that distinction is visually clear. Do not automatically prefer photorealism and do not convert one medium into another. Under [PRIMARY SUBJECT IDENTITY LOCK], identify ONLY persistent visually supported traits that must survive every shot: exposed/covered face, exact visible hair distribution and silhouette (including whether the crown is full-haired or shaved), headwear or its absence, facial hair, facial appearance, clothing/armor design, outer garments such as cloaks/mantles/capes, accessories, silhouette, and other identity-defining features. Do NOT put pose, seated/standing state, gaze, hand position, snow placement, or temporary action state in this section. Explicitly state important ABSENCES when visually clear (for example NO HELMET, NO MASK, NO WEAPON VISIBLE). Write these as strict preservation rules, not creative suggestions. Under [STARTING STATE], record only the reference image's temporary initial state: pose, seated/standing/kneeling state, body orientation, gaze, hand placement, visible object contact, current snow/dirt/wetness accumulation, and other conditions that action may naturally change. This section defines how the generated sequence begins, not permanent identity. Under [BACKGROUND SUBJECT SEPARATION], describe how background people differ from the primary subject and explicitly forbid transferring their helmets, clothing, weapons, facial coverage, or other traits onto the primary subject. If there are no background people, state that no separation is required. Do not infer unseen traits. Under [SHOT PLAN] you MUST provide 3-6 shot opportunities derived from the visible image. Use SHOT 1, SHOT 2, etc., never timestamps. SHOT 1 should preserve or closely match the reference composition. Other shots may suggest tighter/wider/profile/over-shoulder/detail/subject-environment coverage or controlled camera movement only where visually supported. Do not invent story action. Every shot must include [CAMERA / DIRECTING] and explain what visible information it can emphasize. Mark nonessential shots OPTIONAL. This is a menu for a later action compiler, not a required sequence.';
+   const prompt=`Analyze this reference image for AI video generation. Be highly detailed but only describe visually supportable information. Do not invent story, identity, dialogue, audio, motives, or unseen facts.
+
+Return plain text using EXACTLY these headings in this exact order:
+[VISIBLE SUMMARY]
+[CHARACTER / SUBJECT]
+[FACE / HAIR]
+[CLOTHING / ACCESSORIES]
+[POSE / PERFORMANCE]
+[LOCATION / ENVIRONMENT]
+[OBJECTS / PROPS]
+[CAMERA / COMPOSITION]
+[LIGHTING / COLOR]
+[STYLE / MATERIALS]
+[SPATIAL RELATIONSHIPS]
+[VISUAL MEDIUM / STYLE LOCK]
+[PRIMARY SUBJECT IDENTITY LOCK]
+[STARTING STATE]
+[BACKGROUND SUBJECT SEPARATION]
+[CONTINUITY ANCHORS]
+[UNCERTAIN / DO NOT ASSUME]
+[SHOT PLAN]
+
+Under [VISUAL MEDIUM / STYLE LOCK], classify the visible medium/style from evidence only. It may be photorealistic live-action photography, realistic CGI/3D, stylized 3D animation, 2D anime, cartoon, comic/graphic illustration, painterly art, watercolor, stop-motion/clay, pixel art, or another supported medium. Preserve its anatomy/proportions, linework when present, shading, skin/surface treatment, material response, lighting, lens/depth behavior, texture, color treatment, and background rendering. State nearby media it must not drift into when visually clear. Never automatically prefer photorealism or convert one medium into another.
+
+Under [PRIMARY SUBJECT IDENTITY LOCK], include only persistent visible identity traits that must survive every shot: face visibility, exact visible hair distribution and silhouette including full-haired versus shaved crown, headwear or its absence, facial hair, facial appearance, clothing/armor design, outer garments such as cloaks/mantles/capes, accessories, silhouette, and other distinctive features. Do not put pose, seated/standing state, gaze, hand position, snow placement, or temporary action state here. Explicitly state important visible absences such as NO HELMET or NO MASK.
+
+Under [STARTING STATE], record only the reference image's temporary initial state: pose, seated/standing/kneeling state, body orientation, gaze, hand placement, visible object contact, current snow/dirt/wetness accumulation, and other conditions the later action may naturally change.
+
+Under [BACKGROUND SUBJECT SEPARATION], distinguish background people from the primary subject and forbid transferring their helmets, clothing, weapons, facial coverage, or other traits onto the primary subject. If no background people are present, state that no separation is required.
+
+Under [SHOT PLAN], provide 3-6 shot opportunities derived from the visible image. Use SHOT 1, SHOT 2, etc., never timestamps. SHOT 1 should preserve or closely match the reference composition. Other shots may suggest tighter, wider, profile, over-shoulder, detail, subject-environment coverage, or controlled camera movement only where visually supported. Do not invent story action. Every shot must include [CAMERA / DIRECTING] and explain what visible information it can emphasize. Mark nonessential shots OPTIONAL. This is a menu for the later action compiler, not a required sequence.`;
    content=[{type:'image',source:{type:'base64',media_type:body.mediaType||'image/jpeg',data:body.image}},{type:'text',text:prompt}];
   }
   const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens,messages:[{role:'user',content}]})});
